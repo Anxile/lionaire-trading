@@ -10,4 +10,9 @@ public class HomeController {
     public String home() {
         return "Welcome to lionaire trading";
     }
+
+    @GetMapping("/api")
+    public String test() {
+        return "api";
+    }
 }
