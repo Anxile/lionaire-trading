@@ -1,10 +1,14 @@
 package com.lionaire.controller;
 
 import com.lionaire.config.JwtProvider;
+import com.lionaire.model.TwoFactorOTP;
 import com.lionaire.model.User;
 import com.lionaire.repository.UserRepository;
 import com.lionaire.response.AuthResponse;
 import com.lionaire.service.CustomUserDetailsService;
+import com.lionaire.service.EmailService;
+import com.lionaire.service.TwoFactorOtpService;
+import com.lionaire.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,6 +28,12 @@ public class AuthController {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private TwoFactorOtpService twoFactorOtpService;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
@@ -64,11 +71,34 @@ public class AuthController {
 
         String userName = user.getEmail();
         String password = user.getPassword();
+
         Authentication authentication = authenticate(userName, password);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = JwtProvider.generateToken(authentication);
+
+        User authUser = userRepository.findByEmail(userName);
+
+        if(user.getTwoFactorAuth().isEnabled()){
+            AuthResponse res = new AuthResponse();
+            res.setMessage("Two factor authentication is enabled");
+            res.setTwoFactorAuthEnabled(true);
+            String opt = OtpUtils.generateOtp();
+
+            TwoFactorOTP oldTwoFactorOTP = twoFactorOtpService.findByUser(authUser.getId());
+            if(oldTwoFactorOTP!=null){
+                twoFactorOtpService.delete(oldTwoFactorOTP);    //refresh OTP
+            }
+            TwoFactorOTP newTwoFactorOTP = twoFactorOtpService.createTwoFactorOtp(
+                    authUser,opt,jwt
+            );
+
+            emailService.sendVerificationEmail(userName,opt);
+
+            res.setSession(newTwoFactorOTP.getId());
+            return new ResponseEntity<>(res, HttpStatus.ACCEPTED);
+        }
 
         AuthResponse res = new AuthResponse();
         res.setJwt(jwt);
@@ -90,5 +120,23 @@ public class AuthController {
         else{
             return new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
         }
+    }
+
+
+
+    @PostMapping("/verify-otp/{otp}")
+    public ResponseEntity<AuthResponse> verifyOtp(
+            @PathVariable String otp, @RequestParam String id) throws Exception {
+        TwoFactorOTP twoFactorOTP = twoFactorOtpService.findById(id);
+
+        if(twoFactorOtpService.verifyOtp(twoFactorOTP,otp)){
+            AuthResponse res = new AuthResponse();
+            res.setMessage("otp verified");
+            res.setStatus(true);
+            res.setTwoFactorAuthEnabled(true);
+            res.setJwt(twoFactorOTP.getJwt());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }
+        throw new Exception("invalid otp");
     }
 }
