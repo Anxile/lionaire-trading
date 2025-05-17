@@ -32,7 +32,7 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    @PostMapping("api/users/verification/{verificationType}/send-opt}")
+    @PostMapping("api/users/verification/{verificationType}/{send-opt}")
     public ResponseEntity<String> sendVerificationOpt(
             @RequestHeader("Authorization") String jwt,
             @PathVariable VerificationType verificationType

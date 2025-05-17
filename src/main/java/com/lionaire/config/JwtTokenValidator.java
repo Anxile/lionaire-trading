@@ -21,17 +21,17 @@ import java.util.List;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
 
+	private static SecretKey key = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		String jwt = request.getHeader(JwtConstant.HEADER);
 		
 		if(jwt!=null) {
-			jwt=jwt.substring(7);
+			jwt=jwt.replace(JwtConstant.TOKEN_PREFIX, ""); //remove "Bearer" prefix
 			try {
-				
-				SecretKey key= Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
-				
+
 				Claims claims= Jwts.parser()
 						.verifyWith(key)      // replace setSigningKey
 						.build()

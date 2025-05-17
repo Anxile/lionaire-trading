@@ -23,7 +23,7 @@ public class JwtProvider {
 
         String jwt = Jwts.builder()
                 .issuedAt(new Date())
-                .expiration(new Date(new Date().getTime()+86400000))
+                .expiration(new Date(new Date().getTime()+JwtConstant.EXPIRATION_TIME))
                 .claim("email",auth.getName())
                 .claim("authorities", roles)
                 .signWith(key)
@@ -32,7 +32,7 @@ public class JwtProvider {
     }
 
     public static String getEmailFromToken(String token) {
-        token = token.substring(7);
+        token = token.replace(JwtConstant.TOKEN_PREFIX, "");
         Claims claims= Jwts.parser()
                 .verifyWith(key)      // replace setSigningKey
                 .build()

@@ -13,12 +13,17 @@ public class AppConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.sessionManagement(management->management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(Authorize->Authorize.requestMatchers("/api/**").authenticated()
+        http
+                .sessionManagement(
+                management->management
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(Authorize->Authorize
+                        .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll())
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrf->csrf.disable())
-                .cors(cors->cors.configurationSource(corsConfigurationSource()));
+                .cors(cors->cors.configurationSource(corsConfigurationSource())
+                );
         return http.build();
     }
 
