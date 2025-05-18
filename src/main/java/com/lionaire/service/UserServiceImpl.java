@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService{
     public User findByJwt(String jwt) {
         String email = JwtProvider.getEmailFromToken(jwt);
         User user = userRepository.findByEmail(email);
-        if(user!=null){
+        if(user == null){
             throw new RuntimeException("user not found");
         }
         return user;
@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public User findByEmail(String email) {
         User user = userRepository.findByEmail(email);
-        if(user!=null){
+        if(user == null){
             throw new RuntimeException("user not found");
         }
         return user;

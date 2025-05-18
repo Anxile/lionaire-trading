@@ -1,10 +1,9 @@
 package com.lionaire.controller;
 
-import com.lionaire.model.Order;
-import com.lionaire.model.User;
-import com.lionaire.model.Wallet;
-import com.lionaire.model.WalletTransaction;
+import com.lionaire.model.*;
+import com.lionaire.response.PaymentResponse;
 import com.lionaire.service.OrderService;
+import com.lionaire.service.PaymentService;
 import com.lionaire.service.UserService;
 import com.lionaire.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,9 @@ public class WalletController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private PaymentService paymentService;
 
     @GetMapping("/api/wallet")
     public ResponseEntity<Wallet> getUserWallet(@RequestHeader("Authorization") String jwt) {
@@ -60,5 +62,28 @@ public class WalletController {
         Wallet wallet = walletService.payOrder(order, user);
 
         return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
+    }
+
+    @PutMapping("/api/wallet/deposit")
+    public ResponseEntity<Wallet> addMoneyToWallet(
+            @RequestHeader("Authorization")String jwt,
+            @RequestParam(name="order_id") Long orderId,
+            @RequestParam(name="payment_id")String paymentId
+    ) throws Exception {
+        User user =userService.findByJwt(jwt);
+        Wallet wallet = walletService.getUserWallet(user);
+
+
+        PaymentOrder order = paymentService.getPaymentOrderById(orderId);
+        Boolean status=paymentService.ProccedPaymentOrder(order,paymentId);
+
+
+        if(status){
+            wallet=walletService.addBalance(wallet, order.getAmount());
+        }
+
+
+        return new ResponseEntity<>(wallet,HttpStatus.OK);
+
     }
 }
