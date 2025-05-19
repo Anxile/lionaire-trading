@@ -1,12 +1,16 @@
 package com.lionaire.service;
 
+import com.lionaire.domain.OrderStatus;
 import com.lionaire.domain.PaymentMethod;
+import com.lionaire.domain.PaymentOrderStatus;
 import com.lionaire.model.PaymentOrder;
 import com.lionaire.model.User;
 import com.lionaire.repository.PaymentOrderRepository;
 import com.lionaire.response.PaymentResponse;
 import com.stripe.Stripe;
+import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
+import com.stripe.model.InvoicePayment;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+
+import static com.stripe.Stripe.apiKey;
 
 @Service
 public class PaymentServiceImpl implements PaymentService{
@@ -30,6 +36,7 @@ public class PaymentServiceImpl implements PaymentService{
         order.setUser(user);
         order.setAmount(amount);
         order.setPaymentMethod(paymentMethod);
+        order.setStatus(PaymentOrderStatus.PENDING);
         return paymentOrderRepository.save(order);
     }
 
@@ -44,12 +51,35 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Override
     public Boolean ProccedPaymentOrder(PaymentOrder paymentOrder, String paymentId) throws Exception {
-        return null;
+        if(paymentOrder.getStatus().equals(PaymentOrderStatus.PENDING)){
+
+            if(paymentOrder.getPaymentMethod().equals(PaymentMethod.STRIPE)){
+                StripeClient stripe = new StripeClient(apiKey);
+
+
+                Integer amount = payment.get("amount");
+                String status = payment.get("status");
+                if(status.equals("captured")){
+                    paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
+
+                    return true;
+                }
+                paymentOrder.setStatus(PaymentOrderStatus.FAILED);
+                paymentOrderRepository.save(paymentOrder);
+                return false;
+            }
+            paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
+            paymentOrderRepository.save(paymentOrder);
+            paymentOrderRepository.save(paymentOrder);
+            return true;
+        }
+
+        return false;
     }
 
     @Override
     public PaymentResponse createStripePaymentLink(User user, Long Amount, Long orderId) throws StripeException {
-        Stripe.apiKey = stripeSecretKey;
+        apiKey = stripeSecretKey;
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)

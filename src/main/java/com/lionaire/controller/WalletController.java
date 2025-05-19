@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/wallet")
+
 public class WalletController {
 
     @Autowired
@@ -30,6 +30,7 @@ public class WalletController {
     @GetMapping("/api/wallet")
     public ResponseEntity<Wallet> getUserWallet(@RequestHeader("Authorization") String jwt) {
         User user = userService.findByJwt(jwt);
+        System.out.println(user);
 
         Wallet wallet = walletService.getUserWallet(user);
 

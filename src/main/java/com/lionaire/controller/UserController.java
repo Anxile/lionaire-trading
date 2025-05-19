@@ -32,6 +32,12 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    @GetMapping("api/users/{id}")
+    public ResponseEntity<User> findUserById(@PathVariable Long id){
+        User user = userService.findById(id);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
     @PostMapping("api/users/verification/{verificationType}/{send-opt}")
     public ResponseEntity<String> sendVerificationOpt(
             @RequestHeader("Authorization") String jwt,

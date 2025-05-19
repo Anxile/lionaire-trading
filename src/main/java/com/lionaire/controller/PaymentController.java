@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
 public class PaymentController {
 
     @Autowired
@@ -39,5 +38,15 @@ public class PaymentController {
 
 
         return new ResponseEntity<>(paymentResponse, HttpStatus.CREATED);
+    }
+
+
+    @GetMapping("/api/payment/{paymentMethod}/amount/{amount}/check")
+    public ResponseEntity<PaymentResponse> paymentCheck(
+            @PathVariable PaymentMethod paymentMethod,
+            @PathVariable Long amount,
+            @RequestHeader("Authorization") String jwt) {
+
+        return null;
     }
 }
