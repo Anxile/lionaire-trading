@@ -9,7 +9,6 @@ import com.lionaire.service.CoinService;
 import com.lionaire.service.OrderService;
 import com.lionaire.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +17,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
+    @Autowired
     private OrderService orderService;
-
+    @Autowired
     private UserService userSerivce;
 
     @Autowired
@@ -55,9 +55,9 @@ public class OrderController {
             @RequestHeader("Authorization") String jwtToken,
             @PathVariable Long orderId
     ) throws Exception {
-        if (jwtToken == null) {
-            throw new Exception("token missing...");
-        }
+//        if (jwtToken == null) {
+//            throw new Exception("token missing...");
+//        }
 
         User user = userSerivce.findByJwt(jwtToken);
 
@@ -71,17 +71,17 @@ public class OrderController {
 
     @GetMapping()
     public ResponseEntity<List<Order>> getAllOrdersForUser(
-            @RequestHeader("Authorization") String jwtToken,
-            @RequestParam(required = false) String order_type,
+            @RequestHeader("Authorization") String jwt,
+            @RequestParam(required = false) OrderType order_type,
             @RequestParam(required = false) String asset_symbol
     ) throws Exception {
-        if (jwtToken == null) {
+        if (jwt == null) {
             throw new Exception("token missing...");
         }
 
-        User userId = userSerivce.findByJwt(jwtToken);
+        User userId = userSerivce.findByJwt(jwt);
 
-        List<Order> userOrders = orderService.getOrdersByUser(userId, OrderType.valueOf(order_type),asset_symbol);
+        List<Order> userOrders = orderService.getOrdersByUser(userId, order_type,asset_symbol);
         return ResponseEntity.ok(userOrders);
     }
 
