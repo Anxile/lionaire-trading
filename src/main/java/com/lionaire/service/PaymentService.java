@@ -4,6 +4,7 @@ import com.lionaire.domain.PaymentMethod;
 import com.lionaire.model.PaymentOrder;
 import com.lionaire.model.User;
 import com.lionaire.response.PaymentResponse;
+import com.razorpay.RazorpayException;
 import com.stripe.exception.StripeException;
 
 public interface PaymentService {
@@ -12,10 +13,13 @@ public interface PaymentService {
 
     PaymentOrder getPaymentOrderById(Long id) throws Exception;
 
-    Boolean ProccedPaymentOrder (PaymentOrder paymentOrder,
+    Boolean ProcessPaymentOrder (PaymentOrder paymentOrder,
                                  String paymentId) throws Exception;
 
 
-    PaymentResponse createStripePaymentLink(User user, Long Amount,
+    PaymentResponse createRazorPaymentLink(User user, Long amount,
+                                            Long orderId) throws StripeException, StripeException, RazorpayException;
+
+    PaymentResponse createStripePaymentLink(User user, Long amount,
                                             Long orderId) throws StripeException, StripeException;
 }
