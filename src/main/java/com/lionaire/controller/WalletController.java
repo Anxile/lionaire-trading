@@ -76,7 +76,7 @@ public class WalletController {
 
 
         PaymentOrder order = paymentService.getPaymentOrderById(orderId);
-        Boolean status=paymentService.ProccedPaymentOrder(order,paymentId);
+        Boolean status=paymentService.ProcessPaymentOrder(order,paymentId);
 
 
         if(status){
