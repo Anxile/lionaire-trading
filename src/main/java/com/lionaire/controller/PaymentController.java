@@ -34,8 +34,8 @@ public class PaymentController {
 
         PaymentOrder order= paymentService.createOrder(user, amount,paymentMethod);
 
-        paymentResponse=paymentService.createStripePaymentLink(user,amount, order.getId());
 
+        paymentResponse=paymentService.createStripePaymentLink(user,amount, order.getId());
 
         return new ResponseEntity<>(paymentResponse, HttpStatus.CREATED);
     }

@@ -63,13 +63,14 @@ public class PaymentServiceImpl implements PaymentService{
     public Boolean ProcessPaymentOrder(PaymentOrder paymentOrder, String paymentId) throws Exception {
         if(paymentOrder.getStatus().equals(PaymentOrderStatus.PENDING)){
 
-            if(paymentOrder.getPaymentMethod().equals(PaymentMethod.RAZORPAY)){
-                RazorpayClient razorpay = new RazorpayClient(apiKey, RazorApiKey);
-                Payment payment = razorpay.payments.fetch(paymentId);
+            if(paymentOrder.getPaymentMethod().equals(PaymentMethod.STRIPE)){
+                StripeClient stripeClient = new StripeClient(stripeSecretKey);
+                Session payment = stripeClient.checkout().sessions().retrieve(paymentId);
 
-                Integer amount = payment.get("amount");
-                String status = payment.get("status");
-                if(status.equals("captured")){
+
+                Integer amount = Math.toIntExact(payment.getAmountTotal());
+                String status = payment.getPaymentStatus();
+                if(status.equals("paid")){
                     paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
 
                     return true;
@@ -87,72 +88,75 @@ public class PaymentServiceImpl implements PaymentService{
         return false;
     }
 
+//    @Override
+//    public PaymentResponse createRazorPaymentLink(User user, Long amount, Long orderId) throws StripeException, StripeException, RazorpayException {
+//        amount = amount * 100;
+//
+//
+//        try {
+//            // Instantiate a Razorpay client with your key ID and secret
+//            RazorpayClient razorpay = new RazorpayClient(apiKey, RazorApiKey);
+//
+//            JSONObject paymentLinkRequest = new JSONObject();
+//            paymentLinkRequest.put("amount",amount);
+//            paymentLinkRequest.put("currency","INR");
+//
+//
+//            // Create a JSON object with the customer details
+//            JSONObject customer = new JSONObject();
+//            customer.put("name",user.getName());
+//
+//            customer.put("email",user.getEmail());
+//            paymentLinkRequest.put("customer",customer);
+//
+//            // Create a JSON object with the notification settings
+//            JSONObject notify = new JSONObject();
+//            notify.put("email",true);
+//            paymentLinkRequest.put("notify",notify);
+//
+//            // Set the reminder settings
+//            paymentLinkRequest.put("reminder_enable",true);
+//
+//            // Set the callback URL and method
+//            paymentLinkRequest.put("callback_url","http://localhost:5173/wallet/"+orderId);
+//            paymentLinkRequest.put("callback_method","get");
+//
+//            // Create the payment link using the paymentLink.create() method
+//            PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
+//
+//            String paymentLinkId = payment.get("id");
+//            String paymentLinkUrl = payment.get("short_url");
+//
+//            PaymentResponse res=new PaymentResponse();
+//            res.setPayment_url(paymentLinkUrl);
+//
+//
+//            return res;
+//
+//        } catch (RazorpayException e) {
+//
+//            System.out.println("Error creating payment link: " + e.getMessage());
+//            throw new RazorpayException(e.getMessage());
+//        }
+//    }
+
     @Override
-    public PaymentResponse createRazorPaymentLink(User user, Long amount, Long orderId) throws StripeException, StripeException, RazorpayException {
-        amount = amount * 100;
-
-
-        try {
-            // Instantiate a Razorpay client with your key ID and secret
-            RazorpayClient razorpay = new RazorpayClient(apiKey, RazorApiKey);
-
-            JSONObject paymentLinkRequest = new JSONObject();
-            paymentLinkRequest.put("amount",amount);
-            paymentLinkRequest.put("currency","INR");
-
-
-            // Create a JSON object with the customer details
-            JSONObject customer = new JSONObject();
-            customer.put("name",user.getName());
-
-            customer.put("email",user.getEmail());
-            paymentLinkRequest.put("customer",customer);
-
-            // Create a JSON object with the notification settings
-            JSONObject notify = new JSONObject();
-            notify.put("email",true);
-            paymentLinkRequest.put("notify",notify);
-
-            // Set the reminder settings
-            paymentLinkRequest.put("reminder_enable",true);
-
-            // Set the callback URL and method
-            paymentLinkRequest.put("callback_url","http://localhost:5173/wallet/"+orderId);
-            paymentLinkRequest.put("callback_method","get");
-
-            // Create the payment link using the paymentLink.create() method
-            PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
-
-            String paymentLinkId = payment.get("id");
-            String paymentLinkUrl = payment.get("short_url");
-
-            PaymentResponse res=new PaymentResponse();
-            res.setPayment_url(paymentLinkUrl);
-
-
-            return res;
-
-        } catch (RazorpayException e) {
-
-            System.out.println("Error creating payment link: " + e.getMessage());
-            throw new RazorpayException(e.getMessage());
-        }
-    }
-
-    @Override
-    public PaymentResponse createStripePaymentLink(User user, Long amount, Long orderId) throws StripeException, StripeException {
+    public PaymentResponse createStripePaymentLink(User user, Long amount, Long orderId) throws StripeException {
         apiKey = stripeSecretKey;
+
+
+        String successUrl = "http://localhost:2345/api/wallet/deposit?order_id=" + orderId;
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:2345/wallet?order_id="+orderId)
-                .setCancelUrl("http://localhost:2345/payment/cancel")
+                .setSuccessUrl(successUrl + "&payment_id={CHECKOUT_SESSION_ID}")
+                .setCancelUrl("http://localhost:2345/api/payment/cancel")
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                 .setCurrency("cad")
-                                .setUnitAmount(amount*100)
+                                .setUnitAmount(amount * 100)
                                 .setProductData(SessionCreateParams
                                         .LineItem
                                         .PriceData
@@ -165,6 +169,7 @@ public class PaymentServiceImpl implements PaymentService{
                 ).build();
 
         Session session = Session.create(params);
+
 
         System.out.println("session _____ " + session);
 

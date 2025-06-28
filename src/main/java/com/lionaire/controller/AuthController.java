@@ -3,12 +3,11 @@ package com.lionaire.controller;
 import com.lionaire.config.JwtProvider;
 import com.lionaire.model.TwoFactorOTP;
 import com.lionaire.model.User;
+import com.lionaire.model.Wallet;
 import com.lionaire.repository.UserRepository;
+import com.lionaire.repository.WalletRepository;
 import com.lionaire.response.AuthResponse;
-import com.lionaire.service.CustomUserDetailsService;
-import com.lionaire.service.EmailService;
-import com.lionaire.service.TwoFactorOtpService;
-import com.lionaire.service.WatchlistService;
+import com.lionaire.service.*;
 import com.lionaire.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/auth")
@@ -39,6 +40,11 @@ public class AuthController {
     @Autowired
     private WatchlistService watchlistService;
 
+    @Autowired
+    private WalletRepository walletRepository;
+
+
+
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
         User emailExist = userRepository.findByEmail((user.getEmail()));
@@ -49,8 +55,13 @@ public class AuthController {
         newUser.setEmail(user.getEmail());
         newUser.setName(user.getName());
         newUser.setPassword(user.getPassword());
+        Wallet wallet = new Wallet();
+        wallet.setBalance(BigDecimal.valueOf(0));
+        wallet.setUser(newUser);
+
 
         User savedUser = userRepository.save(newUser);
+        walletRepository.save(wallet);
 
         watchlistService.createWatchlist(savedUser);
 
