@@ -8,6 +8,7 @@ import com.lionaire.response.AuthResponse;
 import com.lionaire.service.CustomUserDetailsService;
 import com.lionaire.service.EmailService;
 import com.lionaire.service.TwoFactorOtpService;
+import com.lionaire.service.WatchlistService;
 import com.lionaire.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,9 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private WatchlistService watchlistService;
+
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
         User emailExist = userRepository.findByEmail((user.getEmail()));
@@ -48,6 +52,7 @@ public class AuthController {
 
         User savedUser = userRepository.save(newUser);
 
+        watchlistService.createWatchlist(savedUser);
 
         Authentication authentication=new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
