@@ -4,7 +4,9 @@ import com.lionaire.model.PaymentDetails;
 import com.lionaire.model.User;
 import com.lionaire.repository.PaymentDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PaymentDetailsServiceImpl implements PaymentDetailsService{
 
     @Autowired

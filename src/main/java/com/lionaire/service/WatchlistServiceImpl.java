@@ -5,9 +5,11 @@ import com.lionaire.model.User;
 import com.lionaire.model.Watchlist;
 import com.lionaire.repository.WatchlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class WatchlistServiceImpl implements WatchlistService{
     @Autowired
     private WatchlistRepository watchlistRepository;
