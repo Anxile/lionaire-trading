@@ -17,6 +17,9 @@ public class WalletTransactionServiceImpl implements WalletTransactionService{
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
 
+    public WalletTransactionServiceImpl(WalletTransactionRepository walletTransactionRepository) {
+        this.walletTransactionRepository = walletTransactionRepository;
+    }
 
     @Override
     public WalletTransaction createTransaction(Wallet wallet,

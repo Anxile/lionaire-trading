@@ -4,7 +4,6 @@ import com.lionaire.domain.PaymentMethod;
 import com.lionaire.model.PaymentOrder;
 import com.lionaire.model.User;
 import com.lionaire.response.PaymentResponse;
-import com.razorpay.RazorpayException;
 import com.stripe.exception.StripeException;
 
 public interface PaymentService {
