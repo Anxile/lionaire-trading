@@ -4,6 +4,7 @@ import com.lionaire.domain.WalletTransactionType;
 import com.lionaire.model.Wallet;
 import com.lionaire.model.WalletTransaction;
 import com.lionaire.repository.WalletTransactionRepository;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,11 +15,17 @@ import static org.mockito.Mockito.*;
 
 class WalletTransactionServiceImplTest {
 
+    private Wallet wallet;
+    private WalletTransactionType type;
+
+    @Before
+    public void steup(){
+        wallet = new Wallet();
+        type = WalletTransactionType.ADD_MONEY;
+    }
+
     @Test
     void createTransaction_shouldReturnTransaction() {
-        Wallet wallet = new Wallet();
-        WalletTransactionType type = WalletTransactionType.ADD_MONEY;
-
         WalletTransactionRepository mockRepo = mock(WalletTransactionRepository.class);
         WalletTransaction expectedTx = new WalletTransaction();
         when(mockRepo.save(any())).thenReturn(expectedTx);
@@ -34,9 +41,6 @@ class WalletTransactionServiceImplTest {
 
     @Test
     void getTransactions() {
-        Wallet wallet = new Wallet();
-        WalletTransactionType type = WalletTransactionType.ADD_MONEY;
-
         WalletTransactionRepository mockRepo = mock(WalletTransactionRepository.class);
         WalletTransaction expectedTx = new WalletTransaction();
         when(mockRepo.save(any())).thenReturn(expectedTx);
@@ -48,6 +52,4 @@ class WalletTransactionServiceImplTest {
         verify(mockRepo);
     }
 
-//    @Test
-//    void getTransactions
 }
