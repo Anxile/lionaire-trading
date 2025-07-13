@@ -14,6 +14,9 @@ public class WatchlistServiceImpl implements WatchlistService{
     @Autowired
     private WatchlistRepository watchlistRepository;
 
+    public WatchlistServiceImpl(WatchlistRepository watchlistRepository){
+        this.watchlistRepository = watchlistRepository;
+    }
 
     @Override
     public Watchlist findUserWatchlist(Long userId) throws Exception{
