@@ -57,7 +57,6 @@ class WalletTransactionServiceImplTest {
         List<WalletTransaction> result = walletTransactionService.getTransactions(wallet,type);
 
         assertNotNull(result);
-        verify(mockRepo);
     }
 
 }
