@@ -95,4 +95,20 @@ class WatchlistServiceImplTest {
         assertFalse(watchlist.getCoin().contains(coin));
         verify(mockRepo).save(watchlist);
     }
+
+    @Test
+    void addCoinToWatchlist_shouldAdded() throws Exception {
+        Coin coin = new Coin();
+        Watchlist watchlist = new Watchlist();
+        watchlist.setCoin(new ArrayList<>());
+
+        WatchlistServiceImpl spyService = spy(watchlistService);
+        doReturn(watchlist).when(spyService).findUserWatchlist(userId);
+
+        Coin result = spyService.addCoinToWatchlist(coin,user);
+
+        assertTrue(watchlist.getCoin().contains(coin));
+        assertEquals(coin,result);
+        verify(mockRepo).save(watchlist);
+    }
 }
