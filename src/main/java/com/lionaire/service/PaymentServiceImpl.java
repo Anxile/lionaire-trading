@@ -5,7 +5,10 @@ import com.lionaire.domain.PaymentMethod;
 import com.lionaire.domain.PaymentOrderStatus;
 import com.lionaire.model.PaymentOrder;
 import com.lionaire.model.User;
+import com.lionaire.model.Wallet;
 import com.lionaire.repository.PaymentOrderRepository;
+import com.lionaire.repository.UserRepository;
+import com.lionaire.repository.WalletRepository;
 import com.lionaire.response.PaymentResponse;
 import com.stripe.Stripe;
 import com.stripe.StripeClient;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static com.stripe.Stripe.apiKey;
@@ -27,11 +31,9 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
-    @Value("${razorpay.api.key")
-    private String RazorApiKey;
 
-    @Value("${razorpay.api.secret}")
-    private String apiServiceKwy;
+    @Autowired
+    private WalletRepository walletRepository;
 
     @Autowired
     private PaymentOrderRepository paymentOrderRepository;
@@ -68,6 +70,14 @@ public class PaymentServiceImpl implements PaymentService{
                 String status = payment.getPaymentStatus();
                 if(status.equals("paid")){
                     paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
+                    Optional<Wallet> wallet = walletRepository.findById(paymentOrder.getUser().getId());
+                    if (wallet.isPresent()) {
+                        Wallet userWallet = wallet.get();
+                        userWallet.setBalance(userWallet.getBalance().add(BigDecimal.valueOf(amount)));
+                        walletRepository.save(userWallet);
+                    } else {
+                        throw new Exception("User wallet not found");
+                    }
 
                     return true;
                 }
@@ -84,57 +94,6 @@ public class PaymentServiceImpl implements PaymentService{
         return false;
     }
 
-//    @Override
-//    public PaymentResponse createRazorPaymentLink(User user, Long amount, Long orderId) throws StripeException, StripeException, RazorpayException {
-//        amount = amount * 100;
-//
-//
-//        try {
-//            // Instantiate a Razorpay client with your key ID and secret
-//            RazorpayClient razorpay = new RazorpayClient(apiKey, RazorApiKey);
-//
-//            JSONObject paymentLinkRequest = new JSONObject();
-//            paymentLinkRequest.put("amount",amount);
-//            paymentLinkRequest.put("currency","INR");
-//
-//
-//            // Create a JSON object with the customer details
-//            JSONObject customer = new JSONObject();
-//            customer.put("name",user.getName());
-//
-//            customer.put("email",user.getEmail());
-//            paymentLinkRequest.put("customer",customer);
-//
-//            // Create a JSON object with the notification settings
-//            JSONObject notify = new JSONObject();
-//            notify.put("email",true);
-//            paymentLinkRequest.put("notify",notify);
-//
-//            // Set the reminder settings
-//            paymentLinkRequest.put("reminder_enable",true);
-//
-//            // Set the callback URL and method
-//            paymentLinkRequest.put("callback_url","http://localhost:5173/wallet/"+orderId);
-//            paymentLinkRequest.put("callback_method","get");
-//
-//            // Create the payment link using the paymentLink.create() method
-//            PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
-//
-//            String paymentLinkId = payment.get("id");
-//            String paymentLinkUrl = payment.get("short_url");
-//
-//            PaymentResponse res=new PaymentResponse();
-//            res.setPayment_url(paymentLinkUrl);
-//
-//
-//            return res;
-//
-//        } catch (RazorpayException e) {
-//
-//            System.out.println("Error creating payment link: " + e.getMessage());
-//            throw new RazorpayException(e.getMessage());
-//        }
-//    }
 
     @Override
     public PaymentResponse createStripePaymentLink(User user, Long amount, Long orderId) throws StripeException {
